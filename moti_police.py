@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+import re
 
 # המרת אות לאינדקס (בסיס 0) לפי Excel
 def letter_to_number(col):
@@ -21,20 +22,24 @@ def extract_id_name_dict_from_column(series):
     return id_name_dict
 
 # ספירת הופעות לפי ת"ז (גם אם תת־מחרוזת בתא)
-def count_id_occurrences(id_dict, id_column_series):
+def count_id_occurrences_exact_in_text(id_dict, id_column_series):
     id_column_series = id_column_series.astype(str)
     result = {full_name: 0 for full_name in id_dict.values()}
+
     for cell in id_column_series:
         for id_key, full_name in id_dict.items():
-            if str(id_key) in cell:
+            pattern = r'\b{}\b'.format(re.escape(str(id_key)))
+            if re.search(pattern, cell):
                 result[full_name] += 1
+
     return result
+
 
 # Streamlit UI
 st.set_page_config(page_title="דו\"ח נוכחות", layout="centered", page_icon="📊")
-st.title("📊 דו\"ח נוכחות לפי ת\"ז")
+st.title("📊 דו\"ח נוכחות לפי שם")
 
-uploaded_file = st.file_uploader("בחר קובץ Excel (.xks / .xlsx)", type=["xls", "xlsx", "xks"])
+uploaded_file = st.file_uploader("בחר קובץ Excel (.xlsx)", type=["xls", "xlsx"])
 
 if uploaded_file:
     try:
@@ -48,32 +53,39 @@ if uploaded_file:
         id_name_dict = extract_id_name_dict_from_column(col_c)
 
         # ספירה כללית (עמודה V)
-        attendance_all = count_id_occurrences(id_name_dict, df.iloc[:, 2])
+        attendance_all = count_id_occurrences_exact_in_text(id_name_dict, df.iloc[:, 2])
 
         # פילוח לפי משמרת
         yes_shift = df[df.iloc[:, 1].astype(str) == "משמרת"].iloc[:, 0]
         no_shift = df[df.iloc[:, 1].astype(str) != "משמרת"].iloc[:, 0]
 
-        attendance_shift = count_id_occurrences(id_name_dict, yes_shift)
-        attendance_no_shift = count_id_occurrences(id_name_dict, no_shift)
-
-        # שורת חיפוש
-        search = st.text_input("🔍 חפש לפי שם")
+        attendance_shift = count_id_occurrences_exact_in_text(id_name_dict, yes_shift)
+        attendance_no_shift = count_id_occurrences_exact_in_text(id_name_dict, no_shift)
 
         def dict_to_df(d):
-            df_out = pd.DataFrame(list(d.items()), columns=["שם", "מספר הופעות"])
-            if search:
-                df_out = df_out[df_out["שם"].str.contains(search, case=False)]
+            # סינון שמות שמספר ההופעות שלהם גדול מ-0
+            filtered = {name: count for name, count in d.items() if count > 0}
+            df_out = pd.DataFrame(list(filtered.items()), columns=["שם", "מספר הופעות"]).reset_index(drop=True)
             return df_out.sort_values(by="מספר הופעות", ascending=False)
 
-        st.subheader("עמודה 500 ")
-        st.dataframe(dict_to_df(attendance_all), use_container_width=True)
+
+
+        st.subheader("סהכ מספר אחמושים לאחמש")
+        df_clean = dict_to_df(attendance_all).copy()
+        df_clean.index = [''] * len(df_clean)
+        st.dataframe(df_clean)
 
         st.subheader("נוכחות במשמרת")
-        st.dataframe(dict_to_df(attendance_shift), use_container_width=True)
+        df_clean = dict_to_df(attendance_shift).copy()
+        df_clean.index = [''] * len(df_clean)
+        st.dataframe(df_clean)
 
         st.subheader("נוכחות שלא במשמרת")
-        st.dataframe(dict_to_df(attendance_no_shift), use_container_width=True)
+        df_clean = dict_to_df(attendance_no_shift).copy()
+        df_clean.index = [''] * len(df_clean)
+        st.dataframe(df_clean)
+
+
 
     except Exception as e:
         st.error(f"שגיאה בטעינת הקובץ: {e}")
