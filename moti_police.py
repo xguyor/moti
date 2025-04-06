@@ -1,6 +1,6 @@
 import pandas as pd
 import streamlit as st
-import re
+import re as re
 
 # המרת אות לאינדקס (בסיס 0) לפי Excel
 def letter_to_number(col):
@@ -84,8 +84,6 @@ if uploaded_file:
         df_clean = dict_to_df(attendance_no_shift).copy()
         df_clean.index = [''] * len(df_clean)
         st.dataframe(df_clean)
-
-
 
     except Exception as e:
         st.error(f"שגיאה בטעינת הקובץ: {e}")
