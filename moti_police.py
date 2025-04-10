@@ -1,7 +1,6 @@
 import pandas as pd
 import streamlit as st
 import re as re
-from tkinter import Tk, filedialog
 
 
 # המרת אות לאינדקס (בסיס 0) לפי Excel
