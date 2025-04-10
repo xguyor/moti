@@ -166,11 +166,10 @@ def get_file_from_tkinter():
     )
     return file_path
 
-uploaded_file = get_file_from_tkinter()
 # Streamlit UI
-# st.set_page_config(page_title="דו\"ח נוכחות", layout="centered", page_icon="📊")
-# st.title("📊 דו\"ח נוכחות לפי שם")
-# uploaded_file = st.file_uploader("בחר קובץ Excel (.xlsx)", type=["xls", "xlsx"])
+st.set_page_config(page_title="דו\"ח נוכחות", layout="centered", page_icon="📊")
+st.title("📊 דו\"ח נוכחות לפי שם")
+uploaded_file = st.file_uploader("בחר קובץ Excel (.xlsx)", type=["xls", "xlsx"])
 
 if uploaded_file:
     try:
