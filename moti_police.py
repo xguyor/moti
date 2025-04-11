@@ -184,7 +184,7 @@ def get_file_from_tkinter():
 # uploaded_file = get_file_from_tkinter()
 # Streamlit UI
 st.set_page_config(page_title="דו\"ח נוכחות", layout="centered", page_icon="📊")
-st.title("📊 דו\"ח נוכחות לפי שם")
+st.title('📊  ניתוח דוחות יחפ"צ')
 uploaded_file = st.file_uploader("בחר קובץ Excel (.xlsx)", type=["xls", "xlsx"])
 
 if uploaded_file:
@@ -248,11 +248,11 @@ if uploaded_file:
         st.dataframe(df_clean)
 
 
-        st.subheader("סהכ במשמרת")
+        st.subheader("סה\"כ משמרות ואירועים במשמרת לפי סוג")
         df_merged_shift.index = [''] * len(df_merged_shift)
         st.dataframe(df_merged_shift)
 
-        st.subheader("סהכ לא במשמרת")
+        st.subheader("סה\"כ אירועים לפי סוג לא במשמרת")
         df_merged_no_shift.index = [''] * len(df_merged_no_shift)
         st.dataframe(df_merged_no_shift)
 
