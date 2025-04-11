@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 import re as re
+# from tkinter import Tk, filedialog
 
 
 # המרת אות לאינדקס (בסיס 0) לפי Excel
@@ -37,16 +38,24 @@ def count_id_occurrences_exact_in_text(id_dict, id_column_series):
 
     return result
 
-def dict_to_df(d):
+def dict_to_df(d, id_name_dict):
     # סינון שמות שמספר ההופעות שלהם גדול מ-0 (רק אם המספר חוקי)
     filtered = {
-        name: int(count)
-        for name, count in d.items()
+        the_id: int(count)
+        for the_id, count in d.items()
         if isinstance(count, (int, float)) and count > 0
     }
-    df_out = pd.DataFrame(list(filtered.items()), columns=["שם", "מספר הופעות"]).reset_index(drop=True)
-    return df_out.sort_values(by="מספר הופעות", ascending=False)
 
+    # בניית טבלה בסיסית: עמודה 'ID' ו'מספר הופעות'
+    df_out = pd.DataFrame(list(filtered.items()), columns=["ID", "מספר הופעות"]).reset_index(drop=True)
+
+    # ממפים את ID -> שם (או "לא ידוע" אם חסר במילון)
+    df_out["שם"] = df_out["ID"].map(id_name_dict).fillna("לא ידוע")
+
+    # נרצה רק את עמודות "שם" ו"מספר הופעות"
+    df_out = df_out[["שם", "מספר הופעות"]].sort_values(by="מספר הופעות", ascending=False).reset_index(drop=True)
+
+    return df_out
 def dict_to_df_col(d, col_name):
     items = list(d.items())  # [(tz, value), ...]
     return pd.DataFrame(items, columns=["tz", col_name])
@@ -93,6 +102,13 @@ def sum_by_id_in_text_column(df):
 
     return sums
 
+column_dict = {
+    "O" : "פרטי/מסחרי",
+    "P" : "משאית עד 15 טון",
+    "Q" : "משאית מעל 15 טון",
+    "R" : "פולטריילר",
+    "S" : "אוטובוס"
+}
 def merge_attendance_dicts(
         count_dict,
         dict_O,
@@ -116,11 +132,11 @@ def merge_attendance_dicts(
 
     # הופכים כל מילון ל-DataFrame עם שם עמודה מתאים
     dfCount = dict_to_df_col(count_dict, "מספר הופעות")
-    dfO = dict_to_df_col(dict_O, "O")
-    dfP = dict_to_df_col(dict_P, "P")
-    dfQ = dict_to_df_col(dict_Q, "Q")
-    dfR = dict_to_df_col(dict_R, "R")
-    dfS = dict_to_df_col(dict_S, "S")
+    dfO = dict_to_df_col(dict_O, column_dict["O"])
+    dfP = dict_to_df_col(dict_P, column_dict["P"])
+    dfQ = dict_to_df_col(dict_Q, column_dict["Q"])
+    dfR = dict_to_df_col(dict_R, column_dict["R"])
+    dfS = dict_to_df_col(dict_S, column_dict["S"])
 
     # איחוד (merge) בכל השלבים
     df_merged = (
@@ -144,7 +160,7 @@ def merge_attendance_dicts(
         df_merged["שם"] = df_merged["tz"]
 
     # המרת עמודות מספריות ל-int (אחרי fillna(0))
-    numeric_cols = ["מספר הופעות", "O", "P", "Q", "R", "S"]
+    numeric_cols = ["מספר הופעות", column_dict["O"], column_dict["P"], column_dict["Q"], column_dict["R"], column_dict["S"]]
     for col in numeric_cols:
         df_merged[col] = pd.to_numeric(df_merged[col], errors="coerce").fillna(0).astype(int)
 
@@ -165,6 +181,7 @@ def get_file_from_tkinter():
     )
     return file_path
 
+# uploaded_file = get_file_from_tkinter()
 # Streamlit UI
 st.set_page_config(page_title="דו\"ח נוכחות", layout="centered", page_icon="📊")
 st.title("📊 דו\"ח נוכחות לפי שם")
@@ -226,7 +243,7 @@ if uploaded_file:
 
         # הצגת תוצאות
         st.subheader("סהכ מספר אחמושים לאחמש")
-        df_clean = dict_to_df(attendance_all).copy()
+        df_clean = dict_to_df(attendance_all, id_name_dict).copy()
         df_clean.index = [''] * len(df_clean)
         st.dataframe(df_clean)
 
