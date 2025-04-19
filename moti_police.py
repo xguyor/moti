@@ -107,7 +107,8 @@ column_dict = {
     "P" : "משאית עד 15 טון",
     "Q" : "משאית מעל 15 טון",
     "R" : "פולטריילר",
-    "S" : "אוטובוס"
+    "S" : "אוטובוס",
+    "T" : "הפוך"
 }
 def merge_attendance_dicts(
         count_dict,
@@ -116,6 +117,7 @@ def merge_attendance_dicts(
         dict_Q,
         dict_R,
         dict_S,
+        dict_T,
         id_name_dict
 ):
 
@@ -137,6 +139,7 @@ def merge_attendance_dicts(
     dfQ = dict_to_df_col(dict_Q, column_dict["Q"])
     dfR = dict_to_df_col(dict_R, column_dict["R"])
     dfS = dict_to_df_col(dict_S, column_dict["S"])
+    dfT = dict_to_df_col(dict_S, column_dict["T"])
 
     # איחוד (merge) בכל השלבים
     df_merged = (
@@ -146,6 +149,7 @@ def merge_attendance_dicts(
         .merge(dfQ, how="outer", on="tz")
         .merge(dfR, how="outer", on="tz")
         .merge(dfS, how="outer", on="tz")
+        .merge(dfT, how="outer", on="tz")
     )
 
     # מילוי NaN ב-0 כדי לא לקבל ערכים חסרים בעמודות המספריות
@@ -160,7 +164,7 @@ def merge_attendance_dicts(
         df_merged["שם"] = df_merged["tz"]
 
     # המרת עמודות מספריות ל-int (אחרי fillna(0))
-    numeric_cols = ["מספר הופעות", column_dict["O"], column_dict["P"], column_dict["Q"], column_dict["R"], column_dict["S"]]
+    numeric_cols = ["מספר הופעות", column_dict["O"], column_dict["P"], column_dict["Q"], column_dict["R"], column_dict["S"], column_dict["T"]]
     for col in numeric_cols:
         df_merged[col] = pd.to_numeric(df_merged[col], errors="coerce").fillna(0).astype(int)
 
@@ -194,7 +198,7 @@ if uploaded_file:
         # שמות עמודות לפי אותיות: C, L, V
         df = df.iloc[:, [letter_to_number('C'), letter_to_number('L'), letter_to_number('V'),
                          letter_to_number('O'), letter_to_number('P'), letter_to_number('Q'),
-                         letter_to_number('R'),   letter_to_number('S')]]
+                         letter_to_number('R'),   letter_to_number('S'), letter_to_number('T')]]
 
         # חילוץ ת"ז → שם מלא
         col_c = df.iloc[:, 0]
@@ -205,13 +209,14 @@ if uploaded_file:
         attendance_all = count_id_occurrences_exact_in_text(id_name_dict, df.iloc[:, 2])
 
         # פילוח לפי משמרת
-        yes_shift = df[df.iloc[:, 1].astype(str) == "משמרת"].iloc[:, [0, 3, 4, 5, 6, 7]]
+        yes_shift = df[df.iloc[:, 1].astype(str) == "משמרת"].iloc[:, [0, 3, 4, 5, 6, 7, 8]]
         attendance_shift = count_id_occurrences_exact_in_text(id_name_dict, yes_shift.iloc[:, 0])
         attendance_shift_O = sum_by_id_in_text_column(yes_shift.iloc[:, [0,1]])
         attendance_shift_P = sum_by_id_in_text_column(yes_shift.iloc[:, [0,2]])
         attendance_shift_Q = sum_by_id_in_text_column(yes_shift.iloc[:, [0,3]])
         attendance_shift_R = sum_by_id_in_text_column(yes_shift.iloc[:, [0,4]])
         attendance_shift_S = sum_by_id_in_text_column(yes_shift.iloc[:, [0,5]])
+        attendance_shift_T = sum_by_id_in_text_column(yes_shift.iloc[:, [0,6]])
 
         df_merged_shift = merge_attendance_dicts(
             attendance_shift,
@@ -220,16 +225,18 @@ if uploaded_file:
             attendance_shift_Q,
             attendance_shift_R,
             attendance_shift_S,
+            attendance_shift_T,
             id_name_dict
         )
 
-        no_shift = df[df.iloc[:, 1].astype(str) != "משמרת"].iloc[:, [0, 3, 4, 5, 6, 7]]
+        no_shift = df[df.iloc[:, 1].astype(str) != "משמרת"].iloc[:, [0, 3, 4, 5, 6, 7, 8]]
         attendance_no_shift = count_id_occurrences_exact_in_text(id_name_dict, no_shift.iloc[:, 0])
         attendance_no_shift_O = sum_by_id_in_text_column(no_shift.iloc[:, [0,1]])
         attendance_no_shift_P = sum_by_id_in_text_column(no_shift.iloc[:, [0,2]])
         attendance_no_shift_Q = sum_by_id_in_text_column(no_shift.iloc[:, [0,3]])
         attendance_no_shift_R = sum_by_id_in_text_column(no_shift.iloc[:, [0,4]])
         attendance_no_shift_S = sum_by_id_in_text_column(no_shift.iloc[:, [0,5]])
+        attendance_no_shift_T = sum_by_id_in_text_column(no_shift.iloc[:, [0,6]])
 
         df_merged_no_shift = merge_attendance_dicts(
             attendance_no_shift,
@@ -238,6 +245,7 @@ if uploaded_file:
             attendance_no_shift_Q,
             attendance_no_shift_R,
             attendance_no_shift_S,
+            attendance_no_shift_T,
             id_name_dict
         )
 
