@@ -187,8 +187,11 @@ def get_file_from_tkinter():
 
 # uploaded_file = get_file_from_tkinter()
 # Streamlit UI
-st.set_page_config(page_title="דו\"ח נוכחות", layout="centered", page_icon="📊")
-st.title('📊  ניתוח דוחות יחפ"צ')
+st.set_page_config(page_title="דו\"ח נוכחות", layout="wide", page_icon="📊")
+st.markdown(
+    '<h1 style="text-align: right;">📊 ניתוח דוחות יחפ"צ</h1>',
+    unsafe_allow_html=True
+)
 uploaded_file = st.file_uploader("בחר קובץ Excel (.xlsx)", type=["xls", "xlsx"])
 
 if uploaded_file:
@@ -250,19 +253,28 @@ if uploaded_file:
         )
 
         # הצגת תוצאות
-        st.subheader("סהכ מספר אחמושים לאחמש")
+        st.markdown(
+            '<h3 style="text-align: right;">סה&quot;כ אחמושים לאחמש</h3>',
+            unsafe_allow_html=True
+        )
         df_clean = dict_to_df(attendance_all, id_name_dict).copy()
         df_clean.index = [''] * len(df_clean)
-        st.dataframe(df_clean)
+        st.dataframe(df_clean, use_container_width=True)
 
 
-        st.subheader("סה\"כ משמרות ואירועים במשמרת לפי סוג")
+        st.markdown(
+            '<h3 style="text-align: right;">סה&quot;כ משמרות ואירועים במשמרת לפי סוג</h3>',
+            unsafe_allow_html=True
+        )
         df_merged_shift.index = [''] * len(df_merged_shift)
-        st.dataframe(df_merged_shift)
+        st.dataframe(df_merged_shift, use_container_width=True)
 
-        st.subheader("סה\"כ אירועים לפי סוג לא במשמרת")
+        st.markdown(
+            '<h3 style="text-align: right;">סה&quot;כ אירועים לפי סוג לא במשמרת</h3>',
+            unsafe_allow_html=True
+        )
         df_merged_no_shift.index = [''] * len(df_merged_no_shift)
-        st.dataframe(df_merged_no_shift)
+        st.dataframe(df_merged_no_shift, use_container_width=True)
 
     except Exception as e:
         st.error(f"שגיאה בטעינת הקובץ: {e}")
