@@ -46,14 +46,14 @@ def dict_to_df(d, id_name_dict):
         if isinstance(count, (int, float)) and count > 0
     }
 
-    # בניית טבלה בסיסית: עמודה 'ID' ו'מספר הופעות'
-    df_out = pd.DataFrame(list(filtered.items()), columns=["ID", "מספר הופעות"]).reset_index(drop=True)
+    # בניית טבלה בסיסית: עמודה 'ID' ו'מספר אירועים'
+    df_out = pd.DataFrame(list(filtered.items()), columns=["ID", "מספר אירועים"]).reset_index(drop=True)
 
     # ממפים את ID -> שם (או "לא ידוע" אם חסר במילון)
     df_out["שם"] = df_out["ID"].map(id_name_dict).fillna("לא ידוע")
 
-    # נרצה רק את עמודות "שם" ו"מספר הופעות"
-    df_out = df_out[["שם", "מספר הופעות"]].sort_values(by="מספר הופעות", ascending=False).reset_index(drop=True)
+    # נרצה רק את עמודות "שם" ו"מספר אירועים"
+    df_out = df_out[["שם", "מספר אירועים"]].sort_values(by="מספר אירועים", ascending=False).reset_index(drop=True)
 
     return df_out
 def dict_to_df_col(d, col_name):
@@ -63,7 +63,7 @@ def dict_to_df_col(d, col_name):
 def extend_df_with_columns(df_shift, attendance_dict, id_name_dict):
     df_extended = pd.DataFrame()
     df_extended["שם"] = df_shift.iloc[:, 0].map(id_name_dict)
-    df_extended["מספר הופעות"] = df_shift.iloc[:, 0].map(
+    df_extended["מספר אירועים"] = df_shift.iloc[:, 0].map(
         lambda id_val: attendance_dict.get(id_name_dict.get(id_val, ""), 0)
     )
 
@@ -71,7 +71,7 @@ def extend_df_with_columns(df_shift, attendance_dict, id_name_dict):
     df_extended = pd.concat([df_extended, df_shift.iloc[:, 1:]], axis=1)
 
     # מסנן הופעות אפס אם רוצים
-    df_extended = df_extended[df_extended["מספר הופעות"] > 0]
+    df_extended = df_extended[df_extended["מספר אירועים"] > 0]
 
     return df_extended.reset_index(drop=True)
 
@@ -133,7 +133,7 @@ def merge_attendance_dicts(
         return df_out
 
     # הופכים כל מילון ל-DataFrame עם שם עמודה מתאים
-    dfCount = dict_to_df_col(count_dict, "מספר הופעות")
+    dfCount = dict_to_df_col(count_dict, "מספר אירועים")
     dfO = dict_to_df_col(dict_O, column_dict["O"])
     dfP = dict_to_df_col(dict_P, column_dict["P"])
     dfQ = dict_to_df_col(dict_Q, column_dict["Q"])
@@ -164,26 +164,26 @@ def merge_attendance_dicts(
         df_merged["שם"] = df_merged["tz"]
 
     # המרת עמודות מספריות ל-int (אחרי fillna(0))
-    numeric_cols = ["מספר הופעות", column_dict["O"], column_dict["P"], column_dict["Q"], column_dict["R"], column_dict["S"], column_dict["T"]]
+    numeric_cols = ["מספר אירועים", column_dict["O"], column_dict["P"], column_dict["Q"], column_dict["R"], column_dict["S"], column_dict["T"]]
     for col in numeric_cols:
         df_merged[col] = pd.to_numeric(df_merged[col], errors="coerce").fillna(0).astype(int)
 
-    # סידור העמודות: [שם, מספר הופעות, O, P, Q, R, S]
+    # סידור העמודות: [שם, מספר אירועים, O, P, Q, R, S]
     df_merged = df_merged[["שם"] + numeric_cols]
 
-    # מיון לפי 'מספר הופעות' בסדר יורד
-    df_merged = df_merged.sort_values(by="מספר הופעות", ascending=False).reset_index(drop=True)
+    # מיון לפי 'מספר אירועים' בסדר יורד
+    df_merged = df_merged.sort_values(by="מספר אירועים", ascending=False).reset_index(drop=True)
 
     return df_merged
 
-def get_file_from_tkinter():
-    root = Tk()
-    root.withdraw()  # לא להציג את החלון הראשי
-    file_path = filedialog.askopenfilename(
-        title="בחר קובץ Excel",
-        filetypes=[("Excel files", "*.xls *.xlsx *.xks"), ("All files", "*.*")]
-    )
-    return file_path
+# def get_file_from_tkinter():
+#     root = Tk()
+#     root.withdraw()  # לא להציג את החלון הראשי
+#     file_path = filedialog.askopenfilename(
+#         title="בחר קובץ Excel",
+#         filetypes=[("Excel files", "*.xls *.xlsx *.xks"), ("All files", "*.*")]
+#     )
+#     return file_path
 
 # uploaded_file = get_file_from_tkinter()
 # Streamlit UI
