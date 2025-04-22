@@ -181,18 +181,29 @@ def merge_attendance_dicts(
 #     root.withdraw()  # לא להציג את החלון הראשי
 #     file_path = filedialog.askopenfilename(
 #         title="בחר קובץ Excel",
-#         filetypes=[("Excel files", "*.xls *.xlsx *.xks"), ("All files", "*.*")]
+#         filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")]
 #     )
 #     return file_path
 
 # uploaded_file = get_file_from_tkinter()
 # Streamlit UI
 st.set_page_config(page_title="דו\"ח נוכחות", layout="wide", page_icon="📊")
+# הפעלת RTL ויישור לימין על כל הדף
 st.markdown(
-    '<h1 style="text-align: right;">📊 ניתוח דוחות יחפ"צ</h1>',
+    """
+    <style>
+        html, body, [class*="css"]  {
+            direction: rtl;
+            text-align: right;
+        }
+    </style>
+    """,
     unsafe_allow_html=True
 )
-uploaded_file = st.file_uploader("בחר קובץ Excel (.xlsx)", type=["xls", "xlsx"])
+
+# כותרת ראשית
+st.markdown('<h1>📊 ניתוח דוחות יחפ"צ</h1>', unsafe_allow_html=True)
+uploaded_file = st.file_uploader("בחר קובץ Excel (.xlsx)", type=["xlsx"])
 
 if uploaded_file:
     try:
@@ -209,7 +220,8 @@ if uploaded_file:
         id_name_dict = extract_id_name_dict_from_column(col_c)
 
         # ספירה כללית (עמודה V)
-        attendance_all = count_id_occurrences_exact_in_text(id_name_dict, df.iloc[:, 2])
+        col_v_no_shift = df[df.iloc[:, 1].astype(str) != "משמרת"].iloc[:, 2]
+        attendance_all = count_id_occurrences_exact_in_text(id_name_dict, col_v_no_shift)
 
         # פילוח לפי משמרת
         yes_shift = df[df.iloc[:, 1].astype(str) == "משמרת"].iloc[:, [0, 3, 4, 5, 6, 7, 8]]
@@ -259,7 +271,7 @@ if uploaded_file:
         )
         df_clean = dict_to_df(attendance_all, id_name_dict).copy()
         df_clean.index = [''] * len(df_clean)
-        st.dataframe(df_clean, use_container_width=True)
+        st.dataframe(df_clean, use_container_width=False)
 
 
         st.markdown(
@@ -267,14 +279,14 @@ if uploaded_file:
             unsafe_allow_html=True
         )
         df_merged_shift.index = [''] * len(df_merged_shift)
-        st.dataframe(df_merged_shift, use_container_width=True)
+        st.dataframe(df_merged_shift, use_container_width=False)
 
         st.markdown(
             '<h3 style="text-align: right;">סה&quot;כ אירועים לפי סוג לא במשמרת</h3>',
             unsafe_allow_html=True
         )
         df_merged_no_shift.index = [''] * len(df_merged_no_shift)
-        st.dataframe(df_merged_no_shift, use_container_width=True)
+        st.dataframe(df_merged_no_shift, use_container_width=False)
 
     except Exception as e:
         st.error(f"שגיאה בטעינת הקובץ: {e}")
